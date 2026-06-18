@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Meus Treinos</title>
+<link rel="icon" href="imagens/favicon.ico">
+<link rel="apple-touch-icon" href="imagens/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<!-- Phosphor Icons -->
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ══ HEADER ══════════════════════════════════════════════════════════ -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo-mark">
+        <i class="ph ph-lightning"></i>
+      </div>
+      <div>
+        <h1>MEUS<span>TREINOS</span></h1>
+        <p class="header-sub" id="today-label">carregando...</p>
+      </div>
+    </div>
+    <div class="header-stats" id="header-stats"></div>
+  </header>
+
+  <!-- ══ TABS ════════════════════════════════════════════════════════════ -->
+  <nav class="tabs">
+    <button class="tab active" data-tab="treinos">
+      <i class="ph ph-barbell"></i><span>Treinos</span>
+    </button>
+    <button class="tab" data-tab="historico">
+      <i class="ph ph-calendar-check"></i><span>Histórico</span>
+    </button>
+    <button class="tab" data-tab="biblioteca">
+      <i class="ph ph-books"></i><span>Biblioteca</span>
+    </button>
+    <button class="tab" data-tab="timer">
+      <i class="ph ph-timer"></i><span>Timer</span>
+    </button>
+  </nav>
+
+  <!-- ══ SEÇÃO: TREINOS ══════════════════════════════════════════════════ -->
+  <section id="sec-treinos" class="section active">
+    <div id="checklist-card"></div>
+    <div class="day-strip" id="day-strip"></div>
+    <div id="day-content"></div>
+  </section>
+
+  <!-- ══ SEÇÃO: HISTÓRICO ════════════════════════════════════════════════ -->
+  <section id="sec-historico" class="section">
+    <div class="hist-header">
+      <div>
+        <h2 class="section-title">Histórico</h2>
+        <p class="section-sub">Seus treinos concluídos</p>
+      </div>
+      <div class="streak-badge" id="streak-badge"></div>
+    </div>
+    <div id="hist-list"></div>
+    <div id="hist-empty" class="big-empty" style="display:none">
+      <i class="ph ph-calendar-blank big-empty-icon"></i>
+      <strong>Nenhum treino concluído</strong>
+      <p>Inicie um treino e conclua-o<br>para aparecer aqui.</p>
+    </div>
+  </section>
+
+  <!-- ══ SEÇÃO: BIBLIOTECA ═══════════════════════════════════════════════ -->
+  <section id="sec-biblioteca" class="section">
+    <div class="lib-toolbar">
+      <div>
+        <h2 class="section-title">Biblioteca</h2>
+        <p class="section-sub" id="lib-section-sub">Seus exercícios pessoais</p>
+      </div>
+      <div id="lib-toolbar-actions">
+        <button class="btn-accent" onclick="openExModal(null)">
+          <i class="ph ph-plus"></i> Exercício
+        </button>
+      </div>
+    </div>
+    <div class="lib-mode-tabs">
+      <button id="lib-mode-my" class="lib-mode-btn active" onclick="setLibraryMode('my')">
+        <i class="ph ph-books"></i> Minha biblioteca
+      </button>
+      <button id="lib-mode-catalog" class="lib-mode-btn" onclick="setLibraryMode('catalog')">
+        <i class="ph ph-compass"></i> Explorar catalogo
+      </button>
+    </div>
+    <div class="search-wrap">
+      <i class="ph ph-magnifying-glass search-icon"></i>
+      <input id="lib-search" class="search-input" type="text" placeholder="Buscar exercício..." oninput="renderLibrary()">
+    </div>
+    <div id="catalog-tools" class="catalog-tools" style="display:none">
+      <select id="catalog-category" class="input" onchange="renderLibrary()"></select>
+      <select id="catalog-muscle" class="input" onchange="renderLibrary()"></select>
+      <select id="catalog-equipment" class="input" onchange="renderLibrary()"></select>
+    </div>
+    <div class="lib-filter-row" id="lib-filter-row"></div>
+    <div id="catalog-summary" class="catalog-summary" style="display:none"></div>
+    <div id="lib-grid" class="lib-grid"></div>
+    <div id="lib-empty" class="big-empty" style="display:none">
+      <i class="ph ph-clipboard-text big-empty-icon"></i>
+      <strong>Biblioteca vazia</strong>
+      <p>Adicione seus exercícios favoritos.<br>Eles aparecerão ao montar treinos.</p>
+      <button class="btn-accent" onclick="openExModal(null)">
+        <i class="ph ph-plus"></i> Primeiro exercício
+      </button>
+    </div>
+  </section>
+
+  <!-- ══ SEÇÃO: TIMER ════════════════════════════════════════════════════ -->
+  <section id="sec-timer" class="section">
+    <div class="timer-wrap">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 200 200" width="200" height="200">
+          <circle cx="100" cy="100" r="85" fill="none" stroke="var(--surface2)" stroke-width="10"/>
+          <circle id="ring" cx="100" cy="100" r="85" fill="none"
+            stroke="var(--accent)" stroke-width="10" stroke-linecap="round"
+            stroke-dasharray="534" stroke-dashoffset="0"
+            transform="rotate(-90 100 100)"/>
+        </svg>
+        <div class="timer-inner">
+          <div class="timer-display" id="timer-display">01:00</div>
+          <div class="timer-status" id="timer-status">PRONTO</div>
+        </div>
+      </div>
+      <div class="timer-actions">
+        <button class="tbtn sm" onclick="resetTimer()" title="Reiniciar">
+          <i class="ph ph-arrow-counter-clockwise"></i>
+        </button>
+        <button class="tbtn primary" id="start-btn" onclick="toggleTimer()">Iniciar</button>
+        <button class="tbtn sm" onclick="addTimerMinute()" title="+ 1 minuto">+1m</button>
+      </div>
+      <div class="presets-label">Descanso rápido</div>
+      <div class="preset-row" id="preset-row"></div>
+    </div>
+  </section>
+
+</div><!-- .app -->
+
+<!-- ══ BOTTOM NAV ══════════════════════════════════════════════════════ -->
+<nav class="bottom-nav">
+  <button class="bnav-btn active" data-tab="treinos">
+    <i class="ph ph-barbell"></i><span>Treinos</span>
+  </button>
+  <button class="bnav-btn" data-tab="historico">
+    <i class="ph ph-calendar-check"></i><span>Histórico</span>
+  </button>
+  <button class="bnav-btn" data-tab="biblioteca">
+    <i class="ph ph-books"></i><span>Biblioteca</span>
+  </button>
+  <button class="bnav-btn" data-tab="timer">
+    <i class="ph ph-timer"></i><span>Timer</span>
+  </button>
+</nav>
+
+<!-- ══ MODO TREINO ATIVO ══════════════════════════════════════════════ -->
+<div id="active-screen" class="active-screen">
+  <div class="active-topbar">
+    <div class="active-topbar-info">
+      <div class="active-wk-name" id="active-wk-name">Treino</div>
+      <div class="active-progress-label" id="active-progress-label">0 / 0</div>
+    </div>
+    <div class="active-topbar-right">
+      <div class="active-elapsed" id="active-elapsed">00:00</div>
+      <button class="tbtn sm danger" onclick="confirmStopWorkout()">
+        <i class="ph ph-x"></i> Sair
+      </button>
+    </div>
+  </div>
+  <div class="active-progress-bar"><div id="active-progress-fill" class="active-progress-fill"></div></div>
+
+  <!-- Exercise view -->
+  <div id="active-ex-view" class="active-ex-view">
+    <div class="active-ex-card" id="active-ex-card">
+      <div class="active-ex-icon" id="active-ex-icon">💪</div>
+      <div class="active-ex-name" id="active-ex-name">Exercício</div>
+      <div class="active-ex-sets" id="active-ex-sets">3x12</div>
+      <div class="active-ex-tip"  id="active-ex-tip"></div>
+      <div class="active-ex-muscle" id="active-ex-muscle"></div>
+    </div>
+    <div class="active-nav">
+      <button class="tbtn" id="active-prev" onclick="activeNav(-1)">
+        <i class="ph ph-arrow-left"></i> Anterior
+      </button>
+      <button class="tbtn primary" id="active-next" onclick="activeNav(1)">
+        Próximo <i class="ph ph-arrow-right"></i>
+      </button>
+    </div>
+    <div class="active-rest-section">
+      <div class="active-rest-label">Descanso</div>
+      <div class="active-rest">
+        <button class="rest-btn" onclick="startRestTimer(30)">30s</button>
+        <button class="rest-btn" onclick="startRestTimer(60)">1 min</button>
+        <button class="rest-btn" onclick="startRestTimer(90)">1m30</button>
+      </div>
+    </div>
+    <div class="active-timer-mini" id="active-timer-mini" style="display:none">
+      <i class="ph ph-hourglass-medium" style="color:var(--teal);font-size:16px"></i>
+      <span id="active-timer-val">00:00</span>
+      <button class="rest-stop" onclick="stopRestTimer()">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Finish screen -->
+  <div id="active-finish" class="active-finish" style="display:none">
+    <div class="confetti-wrap" id="confetti-wrap"></div>
+    <div class="finish-icon">🏆</div>
+    <h2 class="finish-title">TREINO<br><span>CONCLUÍDO!</span></h2>
+    <p class="finish-sub" id="finish-sub">Excelente trabalho!</p>
+    <div class="finish-stats" id="finish-stats"></div>
+    <button class="tbtn primary" style="margin-top:1.5rem" onclick="closeActiveWorkout()">
+      <i class="ph ph-check"></i> Fechar
+    </button>
+  </div>
+</div>
+
+<!-- ══ MODAL: EXERCÍCIO ════════════════════════════════════════════════ -->
+<div id="overlay-ex" class="overlay" onclick="if(event.target===this)closeExModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="ex-modal-title">Novo Exercício</h2>
+      <button class="modal-close" onclick="closeExModal()"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Nome do exercício *</label>
+        <input id="ex-name" class="input" type="text" placeholder="Ex: Agachamento livre" maxlength="50">
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label>Grupo muscular *</label>
+          <input id="ex-muscle" class="input" type="text" placeholder="Ex: Pernas" list="muscle-list" maxlength="30">
+          <datalist id="muscle-list"></datalist>
+        </div>
+        <div>
+          <label>Ícone (emoji)</label>
+          <input id="ex-icon" class="input" type="text" placeholder="🏋️" maxlength="4">
+        </div>
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label>Séries × Repetições</label>
+          <input id="ex-sets" class="input" type="text" placeholder="Ex: 4x12" maxlength="15">
+        </div>
+        <div>
+          <label>Cor do grupo</label>
+          <input id="ex-color" class="input-color" type="color" value="#c8f060">
+        </div>
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label>Categoria</label>
+          <select id="ex-category" class="input"></select>
+        </div>
+        <div>
+          <label>Equipamento</label>
+          <input id="ex-equipment" class="input" type="text" placeholder="Ex: halteres" maxlength="30">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Dica / observação</label>
+        <input id="ex-tip" class="input" type="text" placeholder="Ex: Mantenha o core contraído" maxlength="80">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="tbtn" onclick="closeExModal()">Cancelar</button>
+      <button class="tbtn primary" onclick="saveExercise()">
+        <i class="ph ph-floppy-disk"></i> Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: TREINO ══════════════════════════════════════════════════ -->
+<div id="overlay-workout" class="overlay" onclick="if(event.target===this)closeWorkoutModal()">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 id="wk-modal-title">Novo Treino</h2>
+      <button class="modal-close" onclick="closeWorkoutModal()"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Nome do treino *</label>
+        <input id="wk-name" class="input" type="text" placeholder="Ex: Peito & Ombros" maxlength="50">
+      </div>
+      <div class="wk-body">
+        <div class="wk-picker">
+          <p class="col-label"><i class="ph ph-books"></i> Exercícios da biblioteca</p>
+          <div id="wk-filter-row" class="lib-filter-row" style="margin-bottom:8px"></div>
+          <div id="wk-ex-list" class="wk-ex-list"></div>
+          <div id="wk-lib-empty" class="wk-lib-empty" style="display:none">
+            <p>Biblioteca vazia.<br>Adicione exercícios na aba <strong>Biblioteca</strong>.</p>
+          </div>
+        </div>
+        <div class="wk-selected-col">
+          <p class="col-label">
+            <i class="ph ph-list-numbers"></i> Ordem do treino
+            <span id="wk-count" class="count-pill">0</span>
+          </p>
+          <p class="drag-hint"><i class="ph ph-arrows-out-cardinal" style="font-size:10px"></i> Arraste para reordenar</p>
+          <div id="wk-selected-list" class="wk-selected-list"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="tbtn" onclick="closeWorkoutModal()">Cancelar</button>
+      <button class="tbtn primary" onclick="saveWorkout()">
+        <i class="ph ph-floppy-disk"></i> Salvar treino
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: EDITAR HISTÓRICO ════════════════════════════════════════ -->
+<div id="overlay-hist-edit" class="overlay" onclick="if(event.target===this)closeHistEditModal()">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h2>Editar registro</h2>
+      <button class="modal-close" onclick="closeHistEditModal()"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Nome do treino</label>
+        <input id="hist-edit-name" class="input" type="text" maxlength="50">
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label>Data</label>
+          <input id="hist-edit-date" class="input" type="date">
+        </div>
+        <div>
+          <label>Duração (minutos)</label>
+          <input id="hist-edit-duration" class="input" type="number" min="1" max="999" placeholder="Ex: 45">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Dia da semana</label>
+        <select id="hist-edit-day" class="input">
+          <option value="0">Segunda-feira</option>
+          <option value="1">Terça-feira</option>
+          <option value="2">Quarta-feira</option>
+          <option value="3">Quinta-feira</option>
+          <option value="4">Sexta-feira</option>
+          <option value="5">Sábado</option>
+          <option value="6">Domingo</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="tbtn danger-outline" onclick="confirmDeleteHistFromEdit()">
+        <i class="ph ph-trash"></i> Apagar
+      </button>
+      <div style="flex:1"></div>
+      <button class="tbtn" onclick="closeHistEditModal()">Cancelar</button>
+      <button class="tbtn primary" onclick="saveHistEdit()">
+        <i class="ph ph-floppy-disk"></i> Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM DIALOG ═════════════════════════════════════════════════ -->
+<div id="overlay-confirm" class="overlay">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-header">
+      <h2 id="confirm-title">Confirmar</h2>
+      <button class="modal-close" onclick="closeConfirm()"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-msg" style="font-size:14px;color:var(--muted);line-height:1.6"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="tbtn" onclick="closeConfirm()">Cancelar</button>
+      <button class="tbtn primary" id="confirm-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
